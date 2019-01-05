@@ -12,11 +12,13 @@ class TodoListViewController: UITableViewController {
     
     //Variables
     
-    var todoTasks = ["hello1", "hello2", "hello3"] {
+    var todoTasks = [String]() {
         didSet {
             self.tableViewElement.reloadData();
         }
     };
+    
+    let defaults = UserDefaults.standard;
     
     //@IBOutlet
     @IBOutlet var tableViewElement: UITableView!
@@ -26,6 +28,7 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad();
         self.tableViewElement.delegate = self;
         self.tableViewElement.dataSource = self;
+        self.todoTasks = self.defaults.array(forKey: "todoList") as? [String] ?? [];
     }
     
     //MARK - TableView Datasource Methods
@@ -66,6 +69,8 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add task", style: .default) { (action) in
             
             self.todoTasks.append(textField.text!);
+            
+            self.defaults.set(self.todoTasks, forKey: "todoList");
         }
         
         alert.addTextField { (localTextField) in
