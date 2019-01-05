@@ -12,7 +12,11 @@ class TodoListViewController: UITableViewController {
     
     //Variables
     
-    let elements = ["hello1", "hello2", "hello3"];
+    var todoTasks = ["hello1", "hello2", "hello3"] {
+        didSet {
+            self.tableViewElement.reloadData();
+        }
+    };
     
     //@IBOutlet
     @IBOutlet var tableViewElement: UITableView!
@@ -27,11 +31,11 @@ class TodoListViewController: UITableViewController {
     //MARK - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.elements.count;
+        return self.todoTasks.count;
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let el = self.elements[indexPath.row];
+        let el = self.todoTasks[indexPath.row];
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath);
         cell.textLabel?.text = el;
@@ -48,13 +52,31 @@ class TodoListViewController: UITableViewController {
         else {
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark;
         }
-//        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark;
     }
     
-//    override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-////        tableView.deselectRow(at: indexPath, animated: true);
-//        tableView.cellForRow(at: indexPath)?.accessoryType = .none;
-//    }
-//
+    //MARK - Add new elements
+    
+    
+    @IBAction func createTaskPressed(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField();
+        
+        let alert = UIAlertController(title: "Add new task", message: "", preferredStyle: .alert);
+        
+        let action = UIAlertAction(title: "Add task", style: .default) { (action) in
+            
+            self.todoTasks.append(textField.text!);
+        }
+        
+        alert.addTextField { (localTextField) in
+            localTextField.placeholder = "Add new task";
+            textField = localTextField;
+        }
+        
+        alert.addAction(action);
+        self.present(alert, animated: true, completion: nil);
+        
+    }
+    
 }
 

@@ -31,7 +31,14 @@
                             <outlet property="delegate" destination="pZF-a5-nSX" id="NdL-Th-PTo"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Todo-Today" id="do5-dJ-tC4"/>
+                    <navigationItem key="navigationItem" title="Todo-Today" id="do5-dJ-tC4">
+                        <barButtonItem key="rightBarButtonItem" springLoaded="YES" systemItem="add" id="4Uw-b3-SJN">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <connections>
+                                <action selector="createTaskPressed:" destination="pZF-a5-nSX" id="ctT-xS-jxQ"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="tableViewElement" destination="HL9-eG-Zgc" id="ibL-n0-bFH"/>
                     </connections>
