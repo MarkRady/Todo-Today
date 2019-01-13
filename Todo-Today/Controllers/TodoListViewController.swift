@@ -7,12 +7,22 @@
 //
 
 import UIKit;
+import CoreData;
 
 class TodoListViewController: UITableViewController {
     
     //Variables
     
-    var todoTasks = [TaskModel]();
+    var todoTasks = [Task]();
+    
+    var selectedCategory: Category? {
+        didSet {
+            self.loadData();
+            self.title = selectedCategory!.name;
+        }
+    };
+    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext;
     
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         .first?.appendingPathComponent("tasks.plist");
@@ -25,26 +35,14 @@ class TodoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad();
-        self.tableViewElement.delegate = self;
-        self.tableViewElement.dataSource = self;
+//        self.tableViewElement.delegate = self;
+//        self.tableViewElement.dataSource = self;
+//
+//        let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask);
         
-        
-        let newTask1 = TaskModel()
-        newTask1.title = "h1";
-        newTask1.isChecked = false;
-        self.todoTasks.append(newTask1);
-        
-        let newTask2 = TaskModel()
-        newTask2.title = "h1";
-        newTask2.isChecked = false;
-        self.todoTasks.append(newTask2);
-        
-        let newTask3 = TaskModel()
-        newTask3.title = "h1";
-        newTask3.isChecked = false;
-        self.todoTasks.append(newTask3);
-        
-        
+//        self.searchBar.delegate = self;
+        self.loadData();
+
   
     }
     
@@ -84,14 +82,12 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add new task", message: "", preferredStyle: .alert);
         
         let action = UIAlertAction(title: "Add task", style: .default) { (action) in
-            let newTask = TaskModel()
+            let newTask = Task(context: self.context)
             newTask.title = textField.text!;
             newTask.isChecked = false;
+            newTask.category = self.selectedCategory;
             self.todoTasks.append(newTask);
             self.saveTasks();
-//            self.defaults.set(self.todoTasks, forKey: "todoList");
-            
-            
         }
         
         alert.addTextField { (localTextField) in
@@ -105,12 +101,33 @@ class TodoListViewController: UITableViewController {
     }
     
     
-    func saveTasks() {
-        let encoder = PropertyListEncoder();
+    
+    func loadData(with request: NSFetchRequest<Task> = Task.fetchRequest(), predicate : NSPredicate? = nil) {
+        
+        let categoryPredicate = NSPredicate(format: "category.name MATCHES %@", self.selectedCategory!.name!);
+        
+        var predicates: [NSPredicate] = [categoryPredicate];
+        
+        if let searchQuery = predicate {
+            predicates.append(searchQuery)
+        }
+        
+        
+        request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates);
+        
         do {
-            let data = try encoder.encode(self.todoTasks);
-            try data.write(to: self.dataFilePath!);
-            //                data.write(
+            self.todoTasks = try self.context.fetch(request);
+            self.tableView.reloadData();
+        } catch {
+            print("Error has been occured #2");
+        }
+        
+    }
+    
+    
+    func saveTasks() {
+        do {
+            try self.context.save();
         } catch {
             print("Error has been occured #1")
         }
@@ -118,5 +135,44 @@ class TodoListViewController: UITableViewController {
         self.tableViewElement.reloadData();
     }
     
+    
+    
 }
 
+
+extension TodoListViewController: UISearchBarDelegate {
+
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        self.searchAlgo(text: searchBar.text!);
+        if searchBar.text?.count == 0 {
+            self.loadData();
+        }else {
+            self.searchAlgo(text: searchBar.text!);
+        }
+        
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+
+        if searchBar.text?.count == 0 {
+            self.loadData();
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder();
+            }
+        }else {
+            self.searchAlgo(text: searchBar.text!);
+        }
+    }
+    
+    func searchAlgo(text: String){
+        let request: NSFetchRequest<Task> = Task.fetchRequest();
+        
+        let predict = NSPredicate(format: "title CONTAINS[cd] %@", text);
+        
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true);
+        
+//        request.predicate = predict;
+        request.sortDescriptors = [sortDescriptor];
+        self.loadData(with: request, predicate: predict);
+    }
+}
